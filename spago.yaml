@@ -1,0 +1,28 @@
+package:
+  name: diagrams
+  dependencies:
+    - prelude
+    - maybe
+    - foldable-traversable
+    - newtype
+    - control
+    - ordered-collections
+    - profunctor-lenses
+    - tuples
+    - numbers
+    - arrays
+    - lists
+    - orders
+    - linear
+  test:
+    main: Test.Main
+    dependencies:
+      - spec
+      - spec-discovery
+
+workspace:
+  packageSet:
+    registry: 70.0.0
+  extraPackages:
+    linear:
+      path: ../purescript-linear
