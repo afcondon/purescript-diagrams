@@ -6,7 +6,9 @@
         "core": {
           "dependencies": [
             "arrays",
+            "console",
             "control",
+            "effect",
             "foldable-traversable",
             "linear",
             "lists",
@@ -22,6 +24,7 @@
           "build_plan": [
             "arrays",
             "bifunctors",
+            "console",
             "const",
             "contravariant",
             "control",
