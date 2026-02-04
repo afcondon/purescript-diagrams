@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factorization Diagrams</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 24px;
+    }
+    .subtitle {
+      color: #666;
+      margin: 0 0 25px 0;
+      font-size: 14px;
+    }
+    .subtitle a {
+      color: #377eb8;
+      text-decoration: none;
+    }
+    .subtitle a:hover {
+      text-decoration: underline;
+    }
+    #diagram-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+    }
+    #diagram-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .legend {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      font-size: 13px;
+      color: #666;
+    }
+    .legend h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    .color-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Factorization Diagrams</h1>
+    <p class="subtitle">
+      Visualizing prime factorization through recursive symmetry.
+      Based on <a href="https://mathlesstraveled.com/2012/10/05/factorization-diagrams/">Brent Yorgey's factorization diagrams</a>.
+      Implemented in <a href="https://www.purescript.org/">PureScript</a> using purescript-diagrams.
+    </p>
+    <div id="diagram-container">
+      <p>Loading...</p>
+    </div>
+    <div class="legend">
+      <h3>Color Key</h3>
+      <div class="color-row">
+        <div class="color-item">
+          <div class="color-swatch" style="background: #e41a1c"></div>
+          <span>2</span>
+        </div>
+        <div class="color-item">
+          <div class="color-swatch" style="background: #ff7f00"></div>
+          <span>3</span>
+        </div>
+        <div class="color-item">
+          <div class="color-swatch" style="background: #ffff33"></div>
+          <span>5</span>
+        </div>
+        <div class="color-item">
+          <div class="color-swatch" style="background: #4daf4a"></div>
+          <span>7</span>
+        </div>
+        <div class="color-item">
+          <div class="color-swatch" style="background: #377eb8"></div>
+          <span>11</span>
+        </div>
+        <div class="color-item">
+          <div class="color-swatch" style="background: #984ea3"></div>
+          <span>13</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="bundle.js"></script>
+</body>
+</html>

@@ -8,6 +8,8 @@ module Diagrams.TwoD
   , module Diagrams.TwoD.Transform
   , module Diagrams.TwoD.Shapes
   , module Diagrams.TwoD.Diagram
+  , module Diagrams.TwoD.Style
+  , module Diagrams.TwoD.Combinators
   ) where
 
 import Diagrams.TwoD.Types
@@ -55,6 +57,8 @@ import Diagrams.TwoD.Shapes
   , unitSquare
   , hrule
   , vrule
+  , polygon
+  , regPoly
   )
 
 import Diagrams.TwoD.Diagram
@@ -71,4 +75,31 @@ import Diagrams.TwoD.Diagram
   , envelope
   , width
   , height
+  , styled
+  , fillColor
+  , strokeColor
+  , strokeWidth
+  )
+
+import Diagrams.TwoD.Style
+  ( Style
+  , emptyStyle
+  , defaultStyle
+  , fc
+  , lc
+  , lw
+  , opacity
+  , mergeStyles
+  )
+
+import Diagrams.TwoD.Combinators
+  ( hcat
+  , vcat
+  , hsep
+  , vsep
+  , grid
+  , gridWithSep
+  , centerXY
+  , sized
+  , ensquare
   )

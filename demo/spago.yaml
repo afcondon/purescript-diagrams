@@ -1,0 +1,21 @@
+package:
+  name: diagrams-factorization-demo
+  dependencies:
+    - prelude
+    - effect
+    - console
+    - diagrams
+
+  bundle:
+    module: Demo.Factorization.Main
+    outfile: bundle.js
+    platform: browser
+
+workspace:
+  packageSet:
+    registry: 70.0.0
+  extraPackages:
+    diagrams:
+      path: ..
+    linear:
+      path: ../../purescript-linear

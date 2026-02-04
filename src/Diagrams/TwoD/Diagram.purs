@@ -26,6 +26,12 @@ module Diagrams.TwoD.Diagram
   , envelope
   , width
   , height
+
+  -- * Styling
+  , styled
+  , fillColor
+  , strokeColor
+  , strokeWidth
   ) where
 
 import Prelude
@@ -46,6 +52,7 @@ import Diagrams.Core.HasOrigin (class HasOrigin, moveOriginTo)
 import Diagrams.TwoD.Types (P2, unitX, unitY)
 import Diagrams.TwoD.Shapes (Shape2D)
 import Diagrams.TwoD.Transform (rotation, T2)
+import Diagrams.TwoD.Style (Style, emptyStyle)
 
 -- | A 2D diagram is a tree of primitives with transformations.
 data Diagram2D
@@ -53,12 +60,14 @@ data Diagram2D
   | Prim Shape2D                       -- ^ A primitive shape
   | Transformed (T2 Number) Diagram2D  -- ^ A transformed diagram
   | Compose (List Diagram2D)           -- ^ Multiple diagrams overlaid
+  | Styled Style Diagram2D             -- ^ A styled diagram
 
 instance Show Diagram2D where
   show Empty = "Empty"
   show (Prim s) = "(Prim " <> show s <> ")"
   show (Transformed _ d) = "(Transformed ... " <> show d <> ")"
   show (Compose ds) = "(Compose " <> show ds <> ")"
+  show (Styled _ d) = "(Styled ... " <> show d <> ")"
 
 -- | Semigroup instance: overlay diagrams (later diagrams on top)
 instance Semigroup Diagram2D where
@@ -94,6 +103,7 @@ instance Enveloped V2 Number Diagram2D where
     go :: List Diagram2D -> Envelope V2 Number -> Envelope V2 Number
     go List.Nil acc = acc
     go (List.Cons d rest) acc = go rest (append acc (getEnvelope d))
+  getEnvelope (Styled _ d) = getEnvelope d
 
 -- Trace instance: combine traces of all sub-diagrams
 instance Traced V2 Number Diagram2D where
@@ -105,6 +115,7 @@ instance Traced V2 Number Diagram2D where
     go :: List Diagram2D -> Trace V2 Number -> Trace V2 Number
     go List.Nil acc = acc
     go (List.Cons d rest) acc = go rest (append acc (getTrace d))
+  getTrace (Styled _ d) = getTrace d
 
 -- HasOrigin instance
 instance HasOrigin V2 Number Diagram2D where
@@ -114,6 +125,7 @@ instance HasOrigin V2 Number Diagram2D where
   moveOriginTo p (Transformed t d) = Transformed (translation (negated (unP p)) <> t) d
     where unP (P v) = v
   moveOriginTo p (Compose ds) = Compose (map (moveOriginTo p) ds)
+  moveOriginTo p (Styled s d) = Styled s (moveOriginTo p d)
 
 -- Transformable instance
 instance Transformable V2 Number Diagram2D where
@@ -121,6 +133,7 @@ instance Transformable V2 Number Diagram2D where
   transform t (Prim s) = Transformed t (Prim s)
   transform t1 (Transformed t2 d) = Transformed (t1 <> t2) d
   transform t (Compose ds) = Compose (map (transform t) ds)
+  transform t (Styled s d) = Styled s (transform t d)
 
 -- | Translate a diagram by a vector.
 translateD :: V2 Number -> Diagram2D -> Diagram2D
@@ -164,3 +177,19 @@ above = beside unitY
 -- | Place the second diagram below the first.
 below :: Diagram2D -> Diagram2D -> Diagram2D
 below = beside (negated unitY)
+
+-- | Apply a style to a diagram.
+styled :: Style -> Diagram2D -> Diagram2D
+styled = Styled
+
+-- | Set the fill color of a diagram.
+fillColor :: String -> Diagram2D -> Diagram2D
+fillColor c = Styled (emptyStyle { fill = Just c })
+
+-- | Set the stroke color of a diagram.
+strokeColor :: String -> Diagram2D -> Diagram2D
+strokeColor c = Styled (emptyStyle { stroke = Just c })
+
+-- | Set the stroke width of a diagram.
+strokeWidth :: Number -> Diagram2D -> Diagram2D
+strokeWidth w = Styled (emptyStyle { strokeWidth = Just w })

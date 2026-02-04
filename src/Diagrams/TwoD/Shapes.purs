@@ -18,14 +18,22 @@ module Diagrams.TwoD.Shapes
   -- * Line segments
   , hrule
   , vrule
+
+  -- * Polygon
+  , polygon
+  , regPoly
   ) where
 
 import Prelude
 
+import Data.Array as Array
+import Data.Foldable (foldl, maximumBy)
+import Data.Int (toNumber)
 import Data.List (List)
 import Data.List as List
 import Data.Maybe (Maybe(..))
-import Data.Number (sqrt, abs)
+import Data.Number (sqrt, abs, pi, cos, sin)
+import Data.Ord (comparing)
 
 import Linear.V2 (V2(..))
 import Linear.Affine (Point(..), origin, (.-.), (.+^))
@@ -43,6 +51,7 @@ data Shape2D
   = Circle Number              -- ^ Circle with given radius
   | Rectangle Number Number    -- ^ Rectangle with given width and height
   | LineSegment (V2 Number)    -- ^ Line segment from origin in given direction
+  | Polygon (Array (V2 Number)) -- ^ Polygon with vertices relative to centroid
 
 derive instance Eq Shape2D
 
@@ -50,6 +59,7 @@ instance Show Shape2D where
   show (Circle r) = "(Circle " <> show r <> ")"
   show (Rectangle w h) = "(Rectangle " <> show w <> " " <> show h <> ")"
   show (LineSegment v) = "(LineSegment " <> show v <> ")"
+  show (Polygon vs) = "(Polygon " <> show vs <> ")"
 
 -- Circle envelope: for a unit circle centered at origin,
 -- the envelope in direction v is simply 1 (the radius)
@@ -77,10 +87,18 @@ lineEnvelope seg@(V2 sx sy) = mkEnvelope \v ->
       proj = dot seg v / (dot v v)
   in max 0.0 proj
 
+-- Polygon envelope: max projection of vertices onto the direction
+polygonEnvelope :: Array (V2 Number) -> Envelope V2 Number
+polygonEnvelope vertices = mkEnvelope \v ->
+  let n = norm v
+      projections = map (\vtx -> dot vtx v / n) vertices
+  in foldl max 0.0 projections
+
 instance Enveloped V2 Number Shape2D where
   getEnvelope (Circle r) = circleEnvelope r
   getEnvelope (Rectangle w h) = rectEnvelope w h
   getEnvelope (LineSegment v) = lineEnvelope v
+  getEnvelope (Polygon vs) = polygonEnvelope vs
 
 -- Circle trace: intersections of a ray with a circle
 circleTrace :: Number -> Trace V2 Number
@@ -132,10 +150,43 @@ rectTrace w h = mkTrace \(P (V2 px py)) (V2 vx vy) ->
 lineTrace :: V2 Number -> Trace V2 Number
 lineTrace _ = mkTrace \_ _ -> mkSortedList List.Nil
 
+-- Polygon trace: intersections of a ray with polygon edges
+polygonTrace :: Array (V2 Number) -> Trace V2 Number
+polygonTrace vertices = mkTrace \(P (V2 px py)) (V2 vx vy) ->
+  let n = Array.length vertices
+      -- Generate edges: each edge is (v_i, v_{i+1})
+      -- For each edge, compute ray-segment intersection
+      intersections = Array.catMaybes $ Array.mapWithIndex (\i v1 ->
+        let j = (i + 1) `mod` n
+            v2 = case Array.index vertices j of
+              Just v -> v
+              Nothing -> v1  -- shouldn't happen
+        in raySegmentIntersect px py vx vy v1 v2
+      ) vertices
+  in mkSortedList (List.fromFoldable intersections)
+  where
+  -- Ray-segment intersection
+  -- Ray: P + t * D
+  -- Segment: A + u * (B - A) for u in [0, 1]
+  raySegmentIntersect :: Number -> Number -> Number -> Number -> V2 Number -> V2 Number -> Maybe Number
+  raySegmentIntersect px py dx dy (V2 ax ay) (V2 bx by) =
+    let sx = bx - ax  -- segment direction x
+        sy = by - ay  -- segment direction y
+        denom = dx * sy - dy * sx
+    in if abs denom < 1.0e-10
+       then Nothing  -- parallel
+       else
+         let t = ((ax - px) * sy - (ay - py) * sx) / denom
+             u = ((ax - px) * dy - (ay - py) * dx) / denom
+         in if u >= 0.0 && u <= 1.0
+            then Just t
+            else Nothing
+
 instance Traced V2 Number Shape2D where
   getTrace (Circle r) = circleTrace r
   getTrace (Rectangle w h) = rectTrace w h
   getTrace (LineSegment v) = lineTrace v
+  getTrace (Polygon vs) = polygonTrace vs
 
 -- HasOrigin instance (shapes are centered, so moving origin translates them)
 -- Note: This is a simplified implementation - a full implementation would
@@ -150,6 +201,7 @@ instance Transformable V2 Number Shape2D where
   transform t (Circle r) = Circle r  -- Scale would change radius
   transform t (Rectangle w h) = Rectangle w h
   transform t (LineSegment v) = LineSegment v
+  transform t (Polygon vs) = Polygon vs
 
 -- | A circle of the given radius, centered at the origin.
 circle :: Number -> Shape2D
@@ -178,3 +230,14 @@ hrule len = LineSegment (V2 len 0.0)
 -- | A vertical line segment of the given length, centered at the origin.
 vrule :: Number -> Shape2D
 vrule len = LineSegment (V2 0.0 len)
+
+-- | A polygon with the given vertices (relative to centroid).
+polygon :: Array (V2 Number) -> Shape2D
+polygon = Polygon
+
+-- | A regular polygon with n sides and circumradius r, centered at the origin.
+-- | The first vertex is at the top (12 o'clock position).
+regPoly :: Int -> Number -> Shape2D
+regPoly n r = Polygon $ Array.range 0 (n - 1) # map \i ->
+  let theta = 2.0 * pi * toNumber i / toNumber n - pi / 2.0
+  in V2 (r * cos theta) (r * sin theta)
