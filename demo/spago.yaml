@@ -13,7 +13,7 @@ package:
 
 workspace:
   packageSet:
-    registry: 70.0.0
+    registry: 77.13.1
   extraPackages:
     diagrams:
       path: ..
